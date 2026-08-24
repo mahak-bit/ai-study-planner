@@ -13,7 +13,7 @@ A production-grade, AI-powered study planning platform. Students provide their s
 | Database   | PostgreSQL (Neon), Prisma ORM                                                |
 | Auth       | Auth.js v5, Credentials + optional Google OAuth                              |
 | Validation | Zod                                                                          |
-| AI         | Vercel AI SDK + OpenAI, structured outputs, streaming, tool calling          |
+| AI         | Vercel AI SDK + Google Gemini (free tier), structured outputs, tool calling  |
 | Testing    | Vitest (unit/API), Playwright (critical E2E flows)                           |
 | Deployment | Vercel + Neon                                                                |
 
@@ -55,7 +55,7 @@ npm run db:studio     # browse the database
 2. ~~Authentication + database~~ ✅
 3. ~~Onboarding~~ ✅
 4. ~~Study planning (core, non-AI)~~ ✅
-5. AI integration
+5. ~~AI integration~~ ✅
 6. Adaptive planning
 7. Dashboard + analytics
 8. AI Coach

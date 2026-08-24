@@ -10,6 +10,7 @@ const envSchema = z.object({
   DATABASE_URL: z.url(),
   DIRECT_URL: z.url(),
   AUTH_SECRET: z.string().min(1, 'Generate one with: npx auth secret'),
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1, 'Get a free key at aistudio.google.com/apikey'),
 });
 
 export const env = envSchema.parse({
@@ -17,4 +18,5 @@ export const env = envSchema.parse({
   DATABASE_URL: process.env.DATABASE_URL,
   DIRECT_URL: process.env.DIRECT_URL,
   AUTH_SECRET: process.env.AUTH_SECRET,
+  GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });

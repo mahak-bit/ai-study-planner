@@ -16,6 +16,7 @@ import { listSubjectsWithProgress } from '@/lib/services/subject.service';
 import { listTasksInRange } from '@/lib/services/task.service';
 import { listUpcomingExams } from '@/lib/services/exam.service';
 import { AddTaskDialog } from '@/components/planner/add-task-dialog';
+import { GeneratePlanButton } from '@/components/planner/generate-plan-button';
 import { TaskCard } from '@/components/planner/task-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -143,6 +144,7 @@ export default async function PlannerPage({
                 </Button>
               }
             />
+            {subjects.length > 0 && <GeneratePlanButton />}
           </div>
         </div>
 
