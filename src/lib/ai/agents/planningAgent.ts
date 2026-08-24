@@ -38,6 +38,7 @@ export interface PlanningAgentInput {
     topicIds: string[];
   }>;
   existingCommittedMinutesByDate: Record<string, number>;
+  focusNote?: string | null;
 }
 
 export interface PlanningAgentResult {

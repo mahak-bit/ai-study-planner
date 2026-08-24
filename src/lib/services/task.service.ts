@@ -1,8 +1,13 @@
+import { addDays, format } from 'date-fns';
+
 import { prisma } from '@/lib/db/prisma';
+import { rebalanceMissedTask } from '@/lib/services/scheduling/rebalance';
 import { NotFoundError } from '@/lib/services/subject.service';
 import type { CreateTaskInput, MarkMissedInput } from '@/lib/validations/task.schema';
 
 const MANUAL_PLAN_WINDOW_DAYS = 60;
+const REBALANCE_HORIZON_DAYS = 14;
+const ISO = 'yyyy-MM-dd';
 
 async function getOrCreateActivePlan(userId: string) {
   const existing = await prisma.studyPlan.findFirst({
@@ -78,20 +83,125 @@ export async function reopenTask(userId: string, taskId: string) {
   if (result.count === 0) throw new NotFoundError('Task not found');
 }
 
-// Redistribution of the missed minutes onto other tasks is wired up in a
-// later phase alongside the AI-enhanced path — see
-// src/lib/services/scheduling/rebalance.ts for the (already tested)
-// deterministic algorithm this will call.
-export async function markTaskMissed(userId: string, input: MarkMissedInput) {
-  const result = await prisma.studyTask.updateMany({
-    where: { id: input.taskId, userId },
-    data: {
-      status: 'MISSED',
-      missedReason: input.missedReason,
-      missedNote: input.missedNote || null,
+export interface RebalanceSummary {
+  redistributedMinutes: number;
+  affectedTaskCount: number;
+  unresolvedMinutes: number;
+}
+
+// Deterministic redistribution (src/lib/services/scheduling/rebalance.ts) --
+// the graceful-degradation fallback that always works even when the
+// AI-enhanced path (optimizeScheduleWithAI in plan.service.ts) isn't used.
+export async function markTaskMissed(
+  userId: string,
+  input: MarkMissedInput
+): Promise<RebalanceSummary> {
+  const missedTask = await prisma.studyTask.findFirst({ where: { id: input.taskId, userId } });
+  if (!missedTask) throw new NotFoundError('Task not found');
+
+  const today = format(new Date(), ISO);
+  const horizonEnd = format(addDays(new Date(), REBALANCE_HORIZON_DAYS), ISO);
+
+  const [pendingTasks, profile, topics, examTopics] = await Promise.all([
+    prisma.studyTask.findMany({
+      where: {
+        userId,
+        status: 'PENDING',
+        id: { not: missedTask.id },
+        scheduledDate: { gte: new Date(today), lte: new Date(horizonEnd) },
+      },
+    }),
+    prisma.profile.findUnique({ where: { userId } }),
+    prisma.topic.findMany({
+      where: { subject: { userId } },
+      select: { id: true, confidenceLevel: true },
+    }),
+    prisma.examTopic.findMany({
+      where: { exam: { userId } },
+      select: { topicId: true, exam: { select: { examDate: true } } },
+    }),
+  ]);
+
+  const topicConfidence: Record<string, number> = {};
+  for (const t of topics) topicConfidence[t.id] = t.confidenceLevel;
+
+  const topicExamDates: Record<string, string[]> = {};
+  for (const et of examTopics) {
+    const key = format(et.exam.examDate, ISO);
+    (topicExamDates[et.topicId] ??= []).push(key);
+  }
+
+  const weeklyHours = (profile?.weeklyAvailabilityHours as Record<string, number> | null) ?? {};
+  const weekdayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dailyCapMinutesByDate: Record<string, number> = {};
+  const currentLoadByDate: Record<string, number> = {};
+  for (const task of pendingTasks) {
+    const key = format(task.scheduledDate, ISO);
+    currentLoadByDate[key] = (currentLoadByDate[key] ?? 0) + task.durationMinutes;
+  }
+  for (let d = new Date(today); format(d, ISO) <= horizonEnd; d = addDays(d, 1)) {
+    const key = format(d, ISO);
+    const hours = weeklyHours[weekdayKeys[d.getDay()]];
+    if (typeof hours === 'number') dailyCapMinutesByDate[key] = hours * 60;
+  }
+
+  const result = rebalanceMissedTask({
+    missedTask: {
+      id: missedTask.id,
+      scheduledDate: format(missedTask.scheduledDate, ISO),
+      durationMinutes: missedTask.durationMinutes,
+      topicId: missedTask.topicId,
     },
+    pendingTasks: pendingTasks.map((t) => ({
+      id: t.id,
+      scheduledDate: format(t.scheduledDate, ISO),
+      durationMinutes: t.durationMinutes,
+      topicId: t.topicId,
+    })),
+    today,
+    horizonEnd,
+    topicConfidence,
+    topicExamDates,
+    currentLoadByDate,
+    dailyCapMinutesByDate,
   });
-  if (result.count === 0) throw new NotFoundError('Task not found');
+
+  await prisma.$transaction(async (tx) => {
+    await tx.studyTask.update({
+      where: { id: input.taskId },
+      data: {
+        status: 'MISSED',
+        missedReason: input.missedReason,
+        missedNote: input.missedNote || null,
+      },
+    });
+
+    for (const update of result.updates) {
+      await tx.studyTask.update({
+        where: { id: update.taskId },
+        data: { durationMinutes: { increment: update.addedMinutes } },
+      });
+    }
+
+    if (result.unresolvedMinutes > 0) {
+      await tx.recommendation.create({
+        data: {
+          userId,
+          type: 'SCHEDULE_SHORTFALL',
+          title: 'Some missed study time couldn’t be rescheduled',
+          description: `"${missedTask.title}" was missed, and ${result.unresolvedMinutes} of its ${missedTask.durationMinutes} minutes couldn't fit into the next ${REBALANCE_HORIZON_DAYS} days without exceeding your daily availability. Consider adjusting your schedule or availability.`,
+          status: 'ACTIVE',
+          generatedBy: 'MANUAL',
+        },
+      });
+    }
+  });
+
+  return {
+    redistributedMinutes: missedTask.durationMinutes - result.unresolvedMinutes,
+    affectedTaskCount: result.updates.length,
+    unresolvedMinutes: result.unresolvedMinutes,
+  };
 }
 
 export async function deleteTask(userId: string, taskId: string) {

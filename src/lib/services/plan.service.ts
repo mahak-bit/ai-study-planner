@@ -56,7 +56,11 @@ function buildCommittedMinutesByDate(
   return result;
 }
 
-export async function generateAIStudyPlan(userId: string, windowDays = DEFAULT_WINDOW_DAYS) {
+export async function generateAIStudyPlan(
+  userId: string,
+  windowDays = DEFAULT_WINDOW_DAYS,
+  focusNote?: string | null
+) {
   const today = new Date();
   const periodStart = today;
   const periodEnd = addDays(today, windowDays - 1);
@@ -103,6 +107,7 @@ export async function generateAIStudyPlan(userId: string, windowDays = DEFAULT_W
       topicIds: e.topics.map((t) => t.topicId),
     })),
     existingCommittedMinutesByDate: buildCommittedMinutesByDate(existingTasks),
+    focusNote,
   };
 
   const startedAt = Date.now();

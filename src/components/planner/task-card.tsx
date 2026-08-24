@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, RotateCcw, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { completeTask, deleteTask, markTaskMissed, reopenTask } from '@/lib/actions/task.actions';
@@ -68,6 +68,16 @@ function MarkMissedDialog({ taskId }: { taskId: string }) {
       toast.error(result.error);
       return;
     }
+    if (result.affectedTaskCount > 0) {
+      toast.success(
+        `Redistributed ${result.redistributedMinutes} min across ${result.affectedTaskCount} task${result.affectedTaskCount === 1 ? '' : 's'}.`,
+        result.unresolvedMinutes > 0
+          ? { description: `${result.unresolvedMinutes} min couldn't fit — see recommendations.` }
+          : undefined
+      );
+    } else if (result.unresolvedMinutes > 0) {
+      toast.warning("Couldn't reschedule this time — see recommendations.");
+    }
     setOpen(false);
     router.refresh();
   }
@@ -111,6 +121,49 @@ function MarkMissedDialog({ taskId }: { taskId: string }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function OptimizeWithAIButton({ taskId }: { taskId: string }) {
+  const router = useRouter();
+  const [isOptimizing, setIsOptimizing] = useState(false);
+
+  async function handleOptimize() {
+    setIsOptimizing(true);
+    try {
+      const response = await fetch('/api/ai/plan/regenerate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missedTaskId: taskId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error ?? "Couldn't optimize the plan right now.");
+        return;
+      }
+      toast.success(`Plan optimized — ${data.taskCount} tasks rescheduled.`, {
+        description: data.summary,
+      });
+      router.refresh();
+    } catch {
+      toast.error("Couldn't reach the planner. Check your connection and try again.");
+    } finally {
+      setIsOptimizing(false);
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label="Optimize with AI"
+      disabled={isOptimizing}
+      onClick={handleOptimize}
+    >
+      <Sparkles className="size-4" />
+    </Button>
   );
 }
 
@@ -190,6 +243,7 @@ export function TaskCard({ task }: { task: PlannerTask }) {
 
       {task.status !== 'PENDING' && (
         <div className="flex shrink-0 items-center gap-1">
+          {task.status === 'MISSED' && <OptimizeWithAIButton taskId={task.id} />}
           <Button
             type="button"
             variant="ghost"

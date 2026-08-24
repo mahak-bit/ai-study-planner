@@ -68,6 +68,6 @@ ${examsBlock}
 
 Already committed time per day (respect this when budgeting each day's capacity):
 ${committedBlock}
-
+${input.focusNote ? `\n${input.focusNote}\n` : ''}
 Generate the schedule now.`;
 }
