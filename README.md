@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Study Planner
 
-## Getting Started
+A production-grade, AI-powered study planning platform. Students provide their subjects, topics, exams, and availability; an AI planning layer generates a personalized study schedule and continuously adapts it as tasks are completed or missed. An AI Coach answers context-aware questions grounded in the student's real data.
 
-First, run the development server:
+> **Status:** In active development. This README will be completed with screenshots, architecture diagrams, and full setup docs as the project progresses (see the phase plan below).
+
+## Tech Stack
+
+| Layer      | Choice                                                                       |
+| ---------- | ---------------------------------------------------------------------------- |
+| Framework  | Next.js 16 (App Router), TypeScript (strict)                                 |
+| UI         | Tailwind CSS v4, shadcn/ui (Base UI primitives), lucide-react, Framer Motion |
+| Database   | PostgreSQL (Neon), Prisma ORM                                                |
+| Auth       | Auth.js v5, Credentials + optional Google OAuth                              |
+| Validation | Zod                                                                          |
+| AI         | Vercel AI SDK + OpenAI, structured outputs, streaming, tool calling          |
+| Testing    | Vitest (unit/API), Playwright (critical E2E flows)                           |
+| Deployment | Vercel + Neon                                                                |
+
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) _(added in Phase 10)_ for the full architecture writeup, database schema, and AI design.
+
+## Local Development
 
 ```bash
+npm install
+cp .env.example .env   # fill in real values — see comments in the file
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev           # start dev server (Turbopack)
+npm run build          # production build
+npm run start           # run production build
+npm run lint             # ESLint
+npm run typecheck        # TypeScript, no emit
+npm run format          # Prettier write
+npm run format:check   # Prettier check
+npm run test           # Vitest unit tests
+npm run test:e2e       # Playwright E2E tests
+```
 
-## Learn More
+## Development Phases
 
-To learn more about Next.js, take a look at the following resources:
+1. Architecture + setup
+2. Authentication + database
+3. Onboarding
+4. Study planning (core, non-AI)
+5. AI integration
+6. Adaptive planning
+7. Dashboard + analytics
+8. AI Coach
+9. Testing + security
+10. Polish + deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Roadmap (deferred, not forgotten)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Revision / Performance / Schedule-Optimization agents (the agent interface is designed for this)
+- Coach-triggered replanning with explicit user confirmation
+- Full notification/email delivery system
+- Syllabus-PDF upload via RAG/embeddings
+- Proactive Vercel Cron-based rescheduling
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Personal portfolio project.
