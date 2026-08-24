@@ -22,7 +22,7 @@ export default auth((req) => {
   }
 
   if (isLoggedIn && !onboardingCompleted && isProtected) {
-    return NextResponse.redirect(new URL('/onboarding', nextUrl));
+    return NextResponse.redirect(new URL('/onboarding/profile', nextUrl));
   }
 
   if (isLoggedIn && onboardingCompleted && isOnboarding) {
