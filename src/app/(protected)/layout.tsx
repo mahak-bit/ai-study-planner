@@ -2,6 +2,7 @@ import { GraduationCap } from 'lucide-react';
 
 import { signOutAction } from '@/lib/actions/auth.actions';
 import { requireUser } from '@/lib/auth/session';
+import { NavLinks } from '@/components/shared/nav-links';
 import { Button } from '@/components/ui/button';
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -9,10 +10,13 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-4">
-        <div className="flex items-center gap-2 font-semibold">
-          <GraduationCap className="text-primary size-5" />
-          AI Study Planner
+      <header className="flex items-center justify-between gap-4 border-b px-6 py-4">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 font-semibold">
+            <GraduationCap className="text-primary size-5" />
+            AI Study Planner
+          </div>
+          <NavLinks />
         </div>
         <div className="flex items-center gap-4">
           <span className="text-muted-foreground text-sm">{user.email}</span>

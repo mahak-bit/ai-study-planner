@@ -54,7 +54,7 @@ npm run db:studio     # browse the database
 1. ~~Architecture + setup~~ ✅
 2. ~~Authentication + database~~ ✅
 3. ~~Onboarding~~ ✅
-4. Study planning (core, non-AI)
+4. ~~Study planning (core, non-AI)~~ ✅
 5. AI integration
 6. Adaptive planning
 7. Dashboard + analytics
