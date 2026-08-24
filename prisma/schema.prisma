@@ -1,0 +1,435 @@
+// Prisma schema for the AI Study Planner.
+// See ARCHITECTURE.md (added in Phase 10) for the full schema rationale.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js (NextAuth) — standard adapter schema. Field shapes here are fixed
+// by the @auth/prisma-adapter contract; do not rename without also updating
+// the adapter config.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @db.Timestamptz
+
+  accounts Account[]
+  sessions Session[]
+
+  profile          Profile?
+  subjects         Subject[]
+  exams            Exam[]
+  studyPlans       StudyPlan[]
+  studyTasks       StudyTask[]
+  studySessions    StudySession[]
+  quizAttempts     QuizAttempt[]
+  aiConversations  AIConversation[]
+  recommendations  Recommendation[]
+  aiGenerationLogs AIGenerationLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding / profile
+// ---------------------------------------------------------------------------
+
+enum EducationLevel {
+  HIGH_SCHOOL
+  UNDERGRADUATE
+  GRADUATE
+  POSTGRADUATE
+  COMPETITIVE_EXAM
+  OTHER
+}
+
+enum StudyTimePreference {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+}
+
+// Fields are nullable so onboarding can save progressively, step by step,
+// rather than holding everything in client state until a final submit.
+model Profile {
+  id                      String                @id @default(cuid())
+  userId                  String                @unique
+  educationLevel          EducationLevel?
+  timezone                String?
+  goals                   String?
+  // Per-weekday available study hours, e.g. { "mon": 2, "tue": 3, ... }.
+  // A JSON blob is the right weight here — real availability is uneven
+  // across the week, but a full relational table for 7 rows is overkill.
+  weeklyAvailabilityHours Json?
+  preferredStudyTimes     StudyTimePreference[]
+  onboardingCompleted     Boolean               @default(false)
+  createdAt               DateTime              @default(now()) @db.Timestamptz
+  updatedAt               DateTime              @updatedAt @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Subjects, topics, exams
+// ---------------------------------------------------------------------------
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TopicStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  MASTERED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// No stored confidence/progress aggregate here — derived at read time from
+// this subject's Topics in the service layer, so it can never drift out of
+// sync with the topics it's supposed to summarize.
+model Subject {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("#6366f1")
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topics Topic[]
+  exams  Exam[]
+
+  studyTasks    StudyTask[]
+  studySessions StudySession[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Topic {
+  id              String      @id @default(cuid())
+  subjectId       String
+  name            String
+  difficulty      Difficulty  @default(MEDIUM)
+  // 1 (lowest) – 5 (highest), validated at the Zod boundary, not the DB.
+  confidenceLevel Int         @default(3)
+  estimatedHours  Float?
+  status          TopicStatus @default(NOT_STARTED)
+  createdAt       DateTime    @default(now()) @db.Timestamptz
+  updatedAt       DateTime    @updatedAt @db.Timestamptz
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  exams         ExamTopic[]
+  studyTasks    StudyTask[]
+  studySessions StudySession[]
+  quizAttempts  QuizAttempt[]
+
+  @@index([subjectId])
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  userId    String
+  subjectId String
+  title     String
+  examDate  DateTime @db.Date
+  priority  Priority @default(MEDIUM)
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topics  ExamTopic[]
+
+  @@index([userId, examDate])
+}
+
+// Which topics an exam actually covers — the strongest signal the planner
+// and rescheduler have for prioritization. Many-to-many: a cumulative exam
+// can span topics already tied to other exams.
+model ExamTopic {
+  examId  String
+  topicId String
+
+  exam  Exam  @relation(fields: [examId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([examId, topicId])
+}
+
+// ---------------------------------------------------------------------------
+// Study plans & tasks
+// ---------------------------------------------------------------------------
+
+enum PlanStatus {
+  ACTIVE
+  SUPERSEDED
+  ARCHIVED
+}
+
+enum GeneratedBy {
+  AI
+  MANUAL
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  MISSED
+  RESCHEDULED
+}
+
+enum MissedReason {
+  NO_TIME
+  TOO_HARD
+  FORGOT
+  LOW_PRIORITY
+  OTHER
+}
+
+model StudyPlan {
+  id            String      @id @default(cuid())
+  userId        String
+  periodStart   DateTime    @db.Date
+  periodEnd     DateTime    @db.Date
+  status        PlanStatus  @default(ACTIVE)
+  generatedBy   GeneratedBy @default(AI)
+  // Raw structured-output snapshot from the agent call that produced this
+  // plan, kept for auditability. Regeneration creates a new StudyPlan
+  // (marking the old one SUPERSEDED) rather than overwriting this field.
+  rawAIResponse Json?
+  createdAt     DateTime    @default(now()) @db.Timestamptz
+  updatedAt     DateTime    @updatedAt @db.Timestamptz
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks StudyTask[]
+
+  @@index([userId, status])
+}
+
+model StudyTask {
+  id                String        @id @default(cuid())
+  planId            String
+  // Denormalized for the hot-path "all of this user's tasks" query (used by
+  // the dashboard and the coach's tools) without joining through StudyPlan.
+  userId            String
+  subjectId         String?
+  topicId           String?
+  title             String
+  scheduledDate     DateTime      @db.Date
+  startTime         String?
+  durationMinutes   Int
+  priority          Priority      @default(MEDIUM)
+  status            TaskStatus    @default(PENDING)
+  completedAt       DateTime?     @db.Timestamptz
+  missedReason      MissedReason?
+  missedNote        String?
+  // Traceable lineage for redistributed work: which task (if any) this one
+  // absorbed minutes from when the schedule was rebalanced.
+  rescheduledFromId String?
+  createdAt         DateTime      @default(now()) @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @db.Timestamptz
+
+  plan    StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic   Topic?    @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  rescheduledFrom StudyTask?  @relation("TaskLineage", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
+  rescheduledTo   StudyTask[] @relation("TaskLineage")
+
+  studySessions StudySession[]
+
+  @@index([userId, scheduledDate, status])
+}
+
+model StudySession {
+  id                    String    @id @default(cuid())
+  taskId                String?
+  userId                String
+  subjectId             String?
+  topicId               String?
+  actualDurationMinutes Int
+  startedAt             DateTime  @db.Timestamptz
+  endedAt               DateTime? @db.Timestamptz
+  focusRating           Int?
+  notes                 String?
+  createdAt             DateTime  @default(now()) @db.Timestamptz
+
+  task    StudyTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject?   @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic   Topic?     @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+}
+
+// Lightweight manual score logging — not a full quiz-taking engine for MVP.
+model QuizAttempt {
+  id               String   @id @default(cuid())
+  topicId          String?
+  userId           String
+  title            String
+  score            Int
+  totalQuestions   Int
+  timeTakenSeconds Int?
+  createdAt        DateTime @default(now()) @db.Timestamptz
+
+  topic Topic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, topicId])
+}
+
+// ---------------------------------------------------------------------------
+// AI Coach
+// ---------------------------------------------------------------------------
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId])
+}
+
+model AIMessage {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  // Structured record of any tool calls the assistant made while producing
+  // this message (name, args, result) — for display and debugging.
+  toolCalls      Json?
+  createdAt      DateTime    @default(now()) @db.Timestamptz
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations & AI observability
+// ---------------------------------------------------------------------------
+
+enum RecommendationType {
+  WEAK_TOPIC
+  EXAM_RISK
+  CONSISTENCY
+  SCHEDULE_SHORTFALL
+  GENERAL
+}
+
+enum RecommendationStatus {
+  ACTIVE
+  DISMISSED
+}
+
+// Replaces a full notification/delivery system for MVP — surfaced in-app
+// rather than pushed via email/SMS.
+model Recommendation {
+  id          String               @id @default(cuid())
+  userId      String
+  type        RecommendationType
+  title       String
+  description String
+  status      RecommendationStatus @default(ACTIVE)
+  generatedBy GeneratedBy          @default(AI)
+  // Deep-linking payload (e.g. { subjectId, topicId }) — a JSON escape
+  // hatch instead of a polymorphic FK, which Prisma can't express cleanly.
+  metadata    Json?
+  createdAt   DateTime             @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+// Minimal LLMOps observability: every agent call is logged here so plan
+// regeneration history isn't lost and failures are diagnosable.
+model AIGenerationLog {
+  id               String   @id @default(cuid())
+  userId           String
+  agentName        String
+  input            Json
+  output           Json?
+  model            String
+  promptTokens     Int?
+  completionTokens Int?
+  latencyMs        Int?
+  success          Boolean
+  errorMessage     String?
+  createdAt        DateTime @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, agentName])
+}

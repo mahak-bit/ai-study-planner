@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -11,18 +12,26 @@ export default function Home() {
         <CardHeader>
           <Badge variant="secondary" className="mb-2 w-fit gap-1.5">
             <GraduationCap className="size-3.5" />
-            Phase 1 — Scaffold
+            Phase 2 — Database + Auth
           </Badge>
           <CardTitle className="text-2xl">AI Study Planner</CardTitle>
           <CardDescription>
-            Project scaffold is in place: Next.js, Tailwind, shadcn/ui, and the tooling pipeline are
-            wired up and verified. The real landing page and app UI arrive in later phases.
+            Authentication and the database schema are wired up. The real marketing landing page
+            arrives in Phase 10 — for now, sign up to try the auth flow.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button disabled className="w-full">
-            Continue to onboarding
-          </Button>
+        <CardContent className="flex gap-2">
+          <Button
+            render={<Link href="/register">Sign up</Link>}
+            nativeButton={false}
+            className="flex-1"
+          />
+          <Button
+            render={<Link href="/login">Sign in</Link>}
+            nativeButton={false}
+            variant="outline"
+            className="flex-1"
+          />
         </CardContent>
       </Card>
     </div>

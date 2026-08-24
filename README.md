@@ -23,30 +23,36 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) _(added in Phase 10)_ for the full ar
 
 ```bash
 npm install
-cp .env.example .env   # fill in real values — see comments in the file
+cp .env.example .env    # fill in real values — see comments in the file
+npm run db:migrate      # applies prisma/migrations to your database
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Database URLs point at [Neon](https://neon.tech) (serverless Postgres). `DATABASE_URL` is the pooled connection (used by the app via `@prisma/adapter-neon`); `DIRECT_URL` is the unpooled connection (used by the Prisma CLI for migrations) — same host, just without `-pooler` in the hostname.
+
 ## Scripts
 
 ```bash
 npm run dev           # start dev server (Turbopack)
-npm run build          # production build
-npm run start           # run production build
-npm run lint             # ESLint
-npm run typecheck        # TypeScript, no emit
-npm run format          # Prettier write
-npm run format:check   # Prettier check
-npm run test           # Vitest unit tests
-npm run test:e2e       # Playwright E2E tests
+npm run build         # production build
+npm run start          # run production build
+npm run lint            # ESLint
+npm run typecheck       # TypeScript, no emit
+npm run format         # Prettier write
+npm run format:check  # Prettier check
+npm run test          # Vitest unit tests
+npm run test:e2e      # Playwright E2E tests
+npm run db:migrate    # create/apply a migration (dev)
+npm run db:generate   # regenerate the Prisma client
+npm run db:studio     # browse the database
 ```
 
 ## Development Phases
 
-1. Architecture + setup
-2. Authentication + database
+1. ~~Architecture + setup~~ ✅
+2. ~~Authentication + database~~ ✅
 3. Onboarding
 4. Study planning (core, non-AI)
 5. AI integration
