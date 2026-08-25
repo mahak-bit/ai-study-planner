@@ -13,6 +13,13 @@ import { loginSchema } from '@/lib/validations/auth.schema';
 // split from this full one. A single config works everywhere.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  // Auth.js only trusts the request's Host header by default when
+  // NODE_ENV !== "production" (dev) or when it detects VERCEL/CF_PAGES —
+  // without this, `next start` outside Vercel (e.g. local production-build
+  // testing, or any non-Vercel host) throws UntrustedHost on every signIn.
+  // Safe here: this is a single-tenant app behind our own reverse proxy,
+  // not a multi-tenant host relying on Host-header validation for security.
+  trustHost: true,
   // Auth.js requires JWT sessions when Credentials is the only configured
   // provider (it throws UnsupportedStrategy for database sessions in that
   // case) — this holds whenever Google OAuth isn't configured. The Prisma

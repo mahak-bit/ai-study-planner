@@ -15,7 +15,7 @@ const ROLE_MAP: Record<string, UIMessage['role']> = {
 export default async function CoachPage() {
   const user = await requireUser();
   const conversation = await getOrCreateConversation(user.id);
-  const messages = await getConversationMessages(conversation.id);
+  const messages = await getConversationMessages(user.id, conversation.id);
 
   const initialMessages: UIMessage[] = messages.map((m) => ({
     id: m.id,

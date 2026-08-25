@@ -49,6 +49,8 @@ npm run db:generate   # regenerate the Prisma client
 npm run db:studio     # browse the database
 ```
 
+`test:e2e` builds and runs the production server against your real `.env` database (see `playwright.config.ts`), so it needs valid credentials configured first. It deliberately covers only the deterministic, secrets-cheap critical path (auth guard + signup → onboarding → dashboard) rather than AI-dependent flows, which are exercised manually each phase and would make CI slow/flaky/costly — this is also why CI runs `npm run test` (Vitest) but not `test:e2e`.
+
 ## Development Phases
 
 1. ~~Architecture + setup~~ ✅
@@ -59,7 +61,7 @@ npm run db:studio     # browse the database
 6. ~~Adaptive planning~~ ✅
 7. ~~Dashboard + analytics~~ ✅
 8. ~~AI Coach~~ ✅
-9. Testing + security
+9. ~~Testing + security~~ ✅
 10. Polish + deployment
 
 ## Roadmap (deferred, not forgotten)

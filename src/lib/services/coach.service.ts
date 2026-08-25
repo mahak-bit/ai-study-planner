@@ -13,9 +13,13 @@ export async function getOrCreateConversation(userId: string) {
   return prisma.aIConversation.create({ data: { userId } });
 }
 
-export async function getConversationMessages(conversationId: string) {
+// Scoped by userId via the conversation relation, not conversationId alone --
+// the only current caller always passes an ID it just derived from that same
+// user's own conversation, but this function returns message content, so it
+// should never trust an ID without proving ownership itself.
+export async function getConversationMessages(userId: string, conversationId: string) {
   return prisma.aIMessage.findMany({
-    where: { conversationId },
+    where: { conversationId, conversation: { userId } },
     orderBy: { createdAt: 'asc' },
   });
 }
