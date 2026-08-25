@@ -57,7 +57,7 @@ npm run db:studio     # browse the database
 4. ~~Study planning (core, non-AI)~~ ✅
 5. ~~AI integration~~ ✅
 6. ~~Adaptive planning~~ ✅
-7. Dashboard + analytics
+7. ~~Dashboard + analytics~~ ✅
 8. AI Coach
 9. Testing + security
 10. Polish + deployment
