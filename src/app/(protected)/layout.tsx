@@ -11,7 +11,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex items-center justify-between gap-4 border-b px-4 py-4 sm:px-6">
+      <header className="bg-background/70 supports-backdrop-filter:bg-background/60 sticky top-0 z-10 flex items-center justify-between gap-4 border-b px-4 py-4 backdrop-blur sm:px-6">
         <div className="flex min-w-0 items-center gap-3 sm:gap-6">
           <MobileNav />
           <div className="flex shrink-0 items-center gap-2 font-semibold">

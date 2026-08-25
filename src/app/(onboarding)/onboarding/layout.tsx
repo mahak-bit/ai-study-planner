@@ -8,13 +8,13 @@ export default async function OnboardingLayout({ children }: { children: React.R
 
   return (
     <div className="bg-muted/30 flex min-h-full flex-1 flex-col">
-      <header className="bg-background border-b px-6 py-4">
+      <header className="bg-background/70 border-b px-6 py-4 backdrop-blur">
         <div className="mx-auto flex w-full max-w-2xl items-center gap-2 font-semibold">
           <GraduationCap className="text-primary size-5" />
           AI Study Planner
         </div>
       </header>
-      <div className="bg-background border-b py-4">
+      <div className="bg-background/70 border-b py-4 backdrop-blur">
         <OnboardingStepper />
       </div>
       <main id="main-content" className="flex flex-1 justify-center p-6">
