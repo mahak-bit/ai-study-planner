@@ -21,6 +21,15 @@ function computeStreak(completedDates: Date[]): number {
   return streak;
 }
 
+export async function listWeakTopics(userId: string, limit = 5) {
+  return prisma.topic.findMany({
+    where: { subject: { userId }, confidenceLevel: { lte: 2 } },
+    include: { subject: true },
+    orderBy: { confidenceLevel: 'asc' },
+    take: limit,
+  });
+}
+
 export async function getDashboardData(userId: string) {
   const todayStart = new Date(`${format(new Date(), ISO)}T00:00:00.000Z`);
 
@@ -31,12 +40,7 @@ export async function getDashboardData(userId: string) {
         include: { subject: true, topic: true },
         orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
       }),
-      prisma.topic.findMany({
-        where: { subject: { userId }, confidenceLevel: { lte: 2 } },
-        include: { subject: true },
-        orderBy: { confidenceLevel: 'asc' },
-        take: 5,
-      }),
+      listWeakTopics(userId),
       listUpcomingExams(userId, 5),
       prisma.recommendation.findMany({
         where: { userId, status: 'ACTIVE' },
@@ -55,6 +59,14 @@ export async function getDashboardData(userId: string) {
     activeRecommendations,
     streak: computeStreak(completedTasks.map((t) => t.completedAt!)),
   };
+}
+
+export async function getStreak(userId: string) {
+  const completedTasks = await prisma.studyTask.findMany({
+    where: { userId, status: 'COMPLETED', completedAt: { not: null } },
+    select: { completedAt: true },
+  });
+  return computeStreak(completedTasks.map((t) => t.completedAt!));
 }
 
 export interface AnalyticsOverview {

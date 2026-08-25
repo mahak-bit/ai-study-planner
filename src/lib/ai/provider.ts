@@ -21,3 +21,8 @@ const google = createGoogleGenerativeAI({ apiKey: env.GOOGLE_GENERATIVE_AI_API_K
  * generation from a bounded context doesn't need frontier-level reasoning.
  */
 export const planningModel = google('gemini-3.6-flash');
+
+// Same model as planningModel for now -- kept as a separate export so the
+// Coach's model choice can diverge later (e.g. faster/cheaper for chat)
+// without touching the planning/progress agents.
+export const chatModel = google('gemini-3.6-flash');

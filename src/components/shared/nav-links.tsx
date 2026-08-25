@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/planner', label: 'Planner' },
   { href: '/subjects', label: 'Subjects' },
   { href: '/analytics', label: 'Analytics' },
+  { href: '/coach', label: 'AI Coach' },
 ];
 
 export function NavLinks() {

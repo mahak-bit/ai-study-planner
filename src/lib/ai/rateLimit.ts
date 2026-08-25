@@ -10,15 +10,21 @@ const MAX_CALLS_PER_WINDOW = 5;
  * the README roadmap).
  */
 export async function checkAIRateLimit(
-  userId: string
+  userId: string,
+  options?: { agentName?: string; maxCalls?: number }
 ): Promise<{ allowed: boolean; retryAfterMinutes?: number }> {
   const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60_000);
+  const maxCalls = options?.maxCalls ?? MAX_CALLS_PER_WINDOW;
 
   const recentCalls = await prisma.aIGenerationLog.count({
-    where: { userId, createdAt: { gte: windowStart } },
+    where: {
+      userId,
+      createdAt: { gte: windowStart },
+      ...(options?.agentName ? { agentName: options.agentName } : {}),
+    },
   });
 
-  if (recentCalls < MAX_CALLS_PER_WINDOW) {
+  if (recentCalls < maxCalls) {
     return { allowed: true };
   }
 
