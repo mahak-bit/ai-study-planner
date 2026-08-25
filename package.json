@@ -52,6 +52,10 @@
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
   },
+  "overrides": {
+    "@emnapi/core": "1.11.3",
+    "@emnapi/runtime": "1.11.3"
+  },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
