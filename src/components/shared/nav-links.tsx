@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 
-const LINKS = [
+export const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/planner', label: 'Planner' },
   { href: '/subjects', label: 'Subjects' },
@@ -17,8 +17,8 @@ export function NavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-1">
-      {LINKS.map((link) => {
+    <nav className="hidden items-center gap-1 sm:flex">
+      {NAV_LINKS.map((link) => {
         const isActive = pathname.startsWith(link.href);
         return (
           <Link

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 
 import { LoginForm } from '@/components/auth/login-form';
@@ -13,7 +14,9 @@ export default function LoginPage() {
         <CardDescription>Sign in to continue your study plan.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <LoginForm />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
         <p className="text-muted-foreground text-center text-sm">
           Don&apos;t have an account?{' '}
           <Link

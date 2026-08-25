@@ -88,7 +88,7 @@ export default async function PlannerPage({
                 : `${format(weekStart, 'MMM d')} – ${format(weekEnd, 'MMM d, yyyy')}`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center rounded-lg border p-0.5 text-sm">
               <Link
                 href={buildHref({ view: 'week' })}

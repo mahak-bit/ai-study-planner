@@ -17,7 +17,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
       <div className="bg-background border-b py-4">
         <OnboardingStepper />
       </div>
-      <main className="flex flex-1 justify-center p-6">
+      <main id="main-content" className="flex flex-1 justify-center p-6">
         <div className="w-full max-w-2xl">{children}</div>
       </main>
     </div>
