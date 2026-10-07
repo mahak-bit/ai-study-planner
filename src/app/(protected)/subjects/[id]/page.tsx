@@ -1,13 +1,16 @@
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
-import { Pencil, Plus } from 'lucide-react';
+import { ClipboardCheck, Pencil, Plus } from 'lucide-react';
 
 import { deleteExam } from '@/lib/actions/exam.actions';
+import { deleteQuizAttempt } from '@/lib/actions/quiz.actions';
 import { deleteSubject, deleteTopic } from '@/lib/actions/subject.actions';
 import { requireUser } from '@/lib/auth/session';
+import { scorePercent } from '@/lib/services/quiz.service';
 import { getSubjectDetail, NotFoundError } from '@/lib/services/subject.service';
 import { DeleteConfirmButton } from '@/components/shared/delete-confirm-button';
 import { ExamDialog } from '@/components/subjects/exam-dialog';
+import { QuizDialog } from '@/components/subjects/quiz-dialog';
 import { SubjectDialog } from '@/components/subjects/subject-dialog';
 import { TopicDialog } from '@/components/subjects/topic-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +24,12 @@ const DIFFICULTY_VARIANT: Record<string, 'secondary' | 'default' | 'destructive'
   MEDIUM: 'default',
   HARD: 'destructive',
 };
+
+function scoreVariant(percent: number): 'secondary' | 'outline' | 'destructive' {
+  if (percent >= 80) return 'secondary';
+  if (percent < 50) return 'destructive';
+  return 'outline';
+}
 
 export default async function SubjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -87,35 +96,114 @@ export default async function SubjectDetailPage({ params }: { params: Promise<{ 
             <p className="text-muted-foreground text-sm">No topics yet.</p>
           ) : (
             <ul className="divide-y">
-              {subject.topics.map((topic) => (
-                <li key={topic.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{topic.name}</span>
-                    <Badge variant={DIFFICULTY_VARIANT[topic.difficulty]} className="text-xs">
-                      {topic.difficulty.toLowerCase()}
-                    </Badge>
-                    <span className="text-muted-foreground text-xs">
-                      confidence {topic.confidenceLevel}/5
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <TopicDialog
-                      subjectId={subject.id}
-                      topic={topic}
-                      trigger={
-                        <Button variant="ghost" size="icon" aria-label="Edit topic">
-                          <Pencil className="size-3.5" />
-                        </Button>
-                      }
-                    />
+              {subject.topics.map((topic) => {
+                const latestQuiz = topic.quizAttempts[0];
+                return (
+                  <li key={topic.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium">{topic.name}</span>
+                      <Badge variant={DIFFICULTY_VARIANT[topic.difficulty]} className="text-xs">
+                        {topic.difficulty.toLowerCase()}
+                      </Badge>
+                      <span className="text-muted-foreground text-xs">
+                        confidence {topic.confidenceLevel}/5
+                      </span>
+                      {latestQuiz && (
+                        <Badge
+                          variant={scoreVariant(scorePercent(latestQuiz))}
+                          className="text-xs"
+                          title={`Latest quiz: ${latestQuiz.title}`}
+                        >
+                          last quiz {scorePercent(latestQuiz)}%
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <QuizDialog
+                        topics={subject.topics}
+                        defaultTopicId={topic.id}
+                        trigger={
+                          <Button variant="ghost" size="icon" aria-label="Log quiz score">
+                            <ClipboardCheck className="size-3.5" />
+                          </Button>
+                        }
+                      />
+                      <TopicDialog
+                        subjectId={subject.id}
+                        topic={topic}
+                        trigger={
+                          <Button variant="ghost" size="icon" aria-label="Edit topic">
+                            <Pencil className="size-3.5" />
+                          </Button>
+                        }
+                      />
+                      <DeleteConfirmButton
+                        title={`Delete ${topic.name}?`}
+                        description="This permanently deletes the topic and its history."
+                        onConfirm={deleteTopic.bind(null, subject.id, topic.id)}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Quiz scores</CardTitle>
+            <CardDescription>
+              {subject.quizAttempts.length === 0
+                ? 'How you actually score, alongside how confident you feel'
+                : `${subject.quizAttempts.length} logged`}
+            </CardDescription>
+          </div>
+          {subject.topics.length > 0 && (
+            <QuizDialog
+              topics={subject.topics}
+              trigger={
+                <Button size="sm">
+                  <Plus className="size-3.5" /> Log score
+                </Button>
+              }
+            />
+          )}
+        </CardHeader>
+        <CardContent>
+          {subject.topics.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Add a topic before logging quiz scores.</p>
+          ) : subject.quizAttempts.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No quiz scores logged yet.</p>
+          ) : (
+            <ul className="divide-y">
+              {subject.quizAttempts.map((attempt) => {
+                const percent = scorePercent(attempt);
+                return (
+                  <li key={attempt.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium">{attempt.title}</span>
+                      <span className="text-muted-foreground text-xs">{attempt.topicName}</span>
+                      <Badge variant={scoreVariant(percent)} className="text-xs tabular-nums">
+                        {attempt.score}/{attempt.totalQuestions} · {percent}%
+                      </Badge>
+                      <span className="text-muted-foreground text-xs">
+                        {format(attempt.createdAt, 'PP')}
+                        {attempt.timeTakenSeconds
+                          ? ` · ${Math.round(attempt.timeTakenSeconds / 60)} min`
+                          : ''}
+                      </span>
+                    </div>
                     <DeleteConfirmButton
-                      title={`Delete ${topic.name}?`}
-                      description="This permanently deletes the topic and its history."
-                      onConfirm={deleteTopic.bind(null, subject.id, topic.id)}
+                      title={`Delete ${attempt.title}?`}
+                      description="This permanently deletes this quiz score."
+                      onConfirm={deleteQuizAttempt.bind(null, subject.id, attempt.id)}
                     />
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

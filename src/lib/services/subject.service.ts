@@ -41,12 +41,22 @@ export async function getSubjectDetail(userId: string, subjectId: string) {
   const subject = await prisma.subject.findFirst({
     where: { id: subjectId, userId },
     include: {
-      topics: { orderBy: { createdAt: 'asc' } },
+      topics: {
+        orderBy: { createdAt: 'asc' },
+        include: { quizAttempts: { where: { userId }, orderBy: { createdAt: 'desc' } } },
+      },
       exams: { orderBy: { examDate: 'asc' }, include: { topics: true } },
     },
   });
   if (!subject) throw new NotFoundError('Subject not found');
-  return subject;
+
+  const quizAttempts = subject.topics
+    .flatMap((topic) =>
+      topic.quizAttempts.map((attempt) => ({ ...attempt, topicName: topic.name }))
+    )
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  return { ...subject, quizAttempts };
 }
 
 export async function createSubject(userId: string, input: CreateSubjectInput) {

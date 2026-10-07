@@ -240,6 +240,55 @@ async function main() {
     },
   });
 
+  // Logged quiz scores. Differentiation is the interesting one: rated 4/5
+  // confidence but scoring 45% — the kind of blind spot the AI Coach's
+  // getWeakTopics tool is meant to surface.
+  const differentiation = mathematics.topics.find((t) => t.name === 'Differentiation')!;
+  const dataStructures = computerScience.topics.find((t) => t.name === 'Data Structures')!;
+  await prisma.quizAttempt.createMany({
+    data: [
+      {
+        topicId: integration.id,
+        title: 'Integration by parts drill',
+        score: 4,
+        totalQuestions: 10,
+        timeTakenSeconds: 1500,
+        createdAt: subDays(new Date(), 6),
+      },
+      {
+        topicId: integration.id,
+        title: 'Substitution practice set',
+        score: 6,
+        totalQuestions: 10,
+        timeTakenSeconds: 1320,
+        createdAt: subDays(new Date(), 2),
+      },
+      {
+        topicId: differentiation.id,
+        title: 'Chain rule quiz',
+        score: 9,
+        totalQuestions: 20,
+        timeTakenSeconds: 1800,
+        createdAt: subDays(new Date(), 3),
+      },
+      {
+        topicId: thermodynamics.id,
+        title: 'Laws of thermodynamics check',
+        score: 5,
+        totalQuestions: 12,
+        createdAt: subDays(new Date(), 4),
+      },
+      {
+        topicId: dataStructures.id,
+        title: 'Trees and heaps',
+        score: 14,
+        totalQuestions: 15,
+        timeTakenSeconds: 900,
+        createdAt: subDays(new Date(), 5),
+      },
+    ].map((attempt) => ({ ...attempt, userId: user.id })),
+  });
+
   console.log(`Seeded demo account: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
 }
 
