@@ -16,6 +16,7 @@ An AI planning layer builds the initial schedule from your real subjects, topics
 - **Adaptive rescheduling** — missing a task triggers a deterministic engine that redistributes the missed time across upcoming days, respecting each day's real capacity and never silently dropping minutes.
 - **"Optimize with AI"** — an explicit, on-demand regeneration seeded with the deterministic result, so the model refines a real baseline instead of inventing a schedule from scratch.
 - **AI Coach** — a genuine multi-turn, tool-calling agent (not a chatbot wrapper) that reads your real schedule, exams, weak topics, and streak before answering, and is structurally unable to read another user's data or modify your plan.
+- **Quiz score logging** — record practice-test results per topic, so you can see whether a topic is actually sticking rather than only how confident it feels. The AI Coach uses these to flag blind spots: topics you rate highly but keep scoring low on.
 - **Progress analytics** — study time, completion rate, subject progress, and a consistency view, each answering a specific question rather than existing for decoration.
 - **Full auth + onboarding** — email/password (Credentials) with optional Google OAuth, an onboarding wizard, and route protection that redirects based on both authentication and onboarding-completion state.
 - **A planner that reflects reality** — complete, miss, delete, or reopen tasks freely; every change immediately updates your schedule, streak, and analytics.
@@ -127,7 +128,6 @@ npm run db:seed        # populate the demo account
 
 ## Roadmap (deferred, not forgotten)
 
-- `QuizAttempt` manual score-entry UI — the model exists in the schema (scoped from the start as "lightweight manual score logging"), but no UI was built for it in this MVP.
 - Revision / Performance / Schedule-Optimization agents — the `Agent<TInput,TOutput>` interface is designed for this; adding one is a new file, not a rearchitecture.
 - Coach-triggered replanning with explicit user confirmation.
 - Full notification/email delivery system.
