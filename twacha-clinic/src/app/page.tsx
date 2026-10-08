@@ -1,10 +1,12 @@
-import { Hero } from '@/components/sections/hero';
+import { HeroFilm } from '@/components/film/hero-film';
 import { TrustStrip } from '@/components/sections/trust-strip';
 import { About } from '@/components/sections/about';
 import { Why } from '@/components/sections/why';
+import { SkinLayers } from '@/components/sections/skin-layers';
 import { Conditions } from '@/components/sections/conditions';
 import { Treatments } from '@/components/sections/treatments';
 import { Featured } from '@/components/sections/featured';
+import { Marquee } from '@/components/sections/marquee';
 import { BeforeAfter } from '@/components/sections/before-after';
 import { Journey } from '@/components/sections/journey';
 import { Gallery } from '@/components/sections/gallery';
@@ -25,12 +27,14 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }} />
-      <Hero />
+      <HeroFilm />
       <TrustStrip />
       <About />
       <Why />
+      <SkinLayers />
       <Conditions />
       <Treatments />
+      <Marquee />
       <Featured />
       <BeforeAfter />
       <Journey />

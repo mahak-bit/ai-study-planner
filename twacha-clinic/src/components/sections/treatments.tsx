@@ -8,6 +8,7 @@ import { treatmentCategories } from '@/content/treatments';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/ui/reveal';
 import { cn } from '@/lib/cn';
+import { Tilt } from '@/components/ui/tilt';
 
 export function Treatments() {
   const [active, setActive] = useState(treatmentCategories[0].id);
@@ -105,8 +106,9 @@ export function Treatments() {
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.06 * i, ease: [0.22, 1, 0.36, 1] }}
-                  className="group flex flex-col border-r border-b border-line bg-ivory p-8 transition-colors duration-500 hover:bg-white lg:p-10"
+                  className="border-r border-b border-line hover:z-10"
                 >
+                  <Tilt max={4} className="group flex flex-col bg-ivory p-8 transition-[background-color,transform] duration-500 hover:bg-white lg:p-10">
                   <div className="flex items-baseline justify-between gap-4">
                     <h3 className="font-serif text-[1.75rem] leading-tight text-ink">{t.name}</h3>
                     <span className="font-serif text-sm text-taupe">{String(i + 1).padStart(2, '0')}</span>
@@ -120,9 +122,10 @@ export function Treatments() {
                     href={`/book?concern=${encodeURIComponent(t.name)}`}
                     className="mt-8 inline-flex items-center gap-2 self-start text-xs font-semibold tracking-[0.14em] text-charcoal uppercase transition-colors hover:text-clay"
                   >
-                    Explore Treatment
+                    Ask about this treatment
                     <ArrowUpRight aria-hidden className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </Link>
+                  </Tilt>
                 </m.li>
               ))}
             </ul>

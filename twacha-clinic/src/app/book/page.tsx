@@ -13,6 +13,23 @@ export const metadata: Metadata = {
   alternates: { canonical: '/book' },
 };
 
+function FormSkeleton() {
+  return (
+    <div aria-hidden className="animate-pulse space-y-9">
+      <div className="grid gap-9 sm:grid-cols-2">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i}>
+            <div className="h-2.5 w-24 bg-sand" />
+            <div className="mt-5 h-px w-full bg-line" />
+          </div>
+        ))}
+      </div>
+      <div className="h-24 w-full bg-cream" />
+      <div className="h-12 w-52 bg-sand" />
+    </div>
+  );
+}
+
 export default function BookPage() {
   return (
     <section aria-labelledby="book-title" className="pt-32 pb-24 lg:pt-44 lg:pb-36">
@@ -53,7 +70,7 @@ export default function BookPage() {
           </Reveal>
         </div>
         <Reveal className="lg:col-span-6 lg:col-start-7" delay={0.15}>
-          <Suspense fallback={<div className="h-[40rem]" />}>
+          <Suspense fallback={<FormSkeleton />}>
             <BookingForm />
           </Suspense>
         </Reveal>

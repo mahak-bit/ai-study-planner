@@ -107,6 +107,14 @@ export function Contact() {
           </Reveal>
 
           <Reveal className="relative min-h-[22rem] bg-sand lg:col-span-7" delay={0.1}>
+            <div data-map data-lenis-prevent className="absolute inset-0">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center text-sm text-muted">
+              <MapPin aria-hidden className="size-6 text-clay" strokeWidth={1.4} />
+              <p>Loading map…</p>
+              <a href={directionsHref} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-[0.14em] text-charcoal uppercase underline-offset-4 hover:underline">
+                Open in Google Maps
+              </a>
+            </div>
             <iframe
               title={`Map showing ${clinic.fullName}, Talwandi, Kota`}
               src={mapsEmbedSrc}
@@ -114,6 +122,7 @@ export function Contact() {
               referrerPolicy="no-referrer-when-downgrade"
               className="absolute inset-0 h-full w-full border-0 grayscale-[0.6] sepia-[0.15] transition-[filter] duration-700 hover:grayscale-0 hover:sepia-0"
             />
+            </div>
           </Reveal>
         </div>
       </div>

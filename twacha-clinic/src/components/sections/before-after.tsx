@@ -10,7 +10,7 @@ function CompareSlider({ item }: { item: BeforeAfterCase }) {
   const [pos, setPos] = useState(50);
   return (
     <figure>
-      <div className="relative aspect-[4/5] overflow-hidden bg-sand select-none">
+      <div className="relative aspect-[4/5] overflow-hidden bg-sand select-none focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-clay">
         <Image src={item.after.src} alt={item.after.alt} fill sizes="(min-width: 1024px) 33vw, 100vw" className="object-cover" />
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
           <Image src={item.before.src} alt={item.before.alt} fill sizes="(min-width: 1024px) 33vw, 100vw" className="object-cover" />

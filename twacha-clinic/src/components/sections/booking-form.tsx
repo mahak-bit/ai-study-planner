@@ -65,7 +65,7 @@ function buildMessage(f: Fields) {
 }
 
 const inputClasses =
-  'mt-2 block w-full border-0 border-b border-charcoal/20 bg-transparent px-0 py-3 text-base text-ink placeholder:text-taupe/70 transition-colors focus:border-clay focus:ring-0 focus:outline-none aria-[invalid=true]:border-red-700';
+  'mt-2 block w-full border-0 border-b border-charcoal/20 bg-transparent px-0 py-3 text-base text-ink placeholder:text-taupe/70 transition-colors focus:border-clay focus-visible:outline-offset-4 aria-[invalid=true]:border-red-700';
 
 function Field({ id, label, optional, error, children }: { id: string; label: string; optional?: boolean; error?: string; children: React.ReactNode }) {
   return (

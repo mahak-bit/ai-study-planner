@@ -9,6 +9,7 @@ import { navLinks } from '@/content/navigation';
 import { buttonClasses } from '@/components/ui/button';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 import { cn } from '@/lib/cn';
+import { getLenis } from '@/components/ui/smooth-scroll';
 import { Logo } from './logo';
 
 export function Navbar() {
@@ -29,6 +30,7 @@ export function Navbar() {
     if (!open) return;
     const { overflow } = document.body.style;
     document.body.style.overflow = 'hidden';
+    getLenis()?.stop();
     panelRef.current?.querySelector<HTMLElement>('a, button')?.focus();
 
     const onKey = (e: KeyboardEvent) => {
@@ -48,6 +50,7 @@ export function Navbar() {
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = overflow;
+      getLenis()?.start();
       window.removeEventListener('keydown', onKey);
     };
   }, [open, close]);
@@ -151,7 +154,7 @@ export function Navbar() {
                 <X aria-hidden className="size-5" />
               </button>
             </div>
-            <div className="container-x flex flex-1 flex-col justify-between overflow-y-auto pt-6 pb-10">
+            <div data-lenis-prevent className="container-x flex flex-1 flex-col justify-between overflow-y-auto pt-6 pb-10">
               <ul className="space-y-1">
                 {navLinks.map((link, i) => (
                   <m.li

@@ -29,9 +29,24 @@
   }
 }
 
+@keyframes cue {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(200%);
+  }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+  }
+  /* Lenis owns smoothing when it is active. */
+  html.lenis {
+    scroll-behavior: auto;
+  }
+  html {
     scroll-padding-top: 6rem;
     -webkit-text-size-adjust: 100%;
   }
@@ -109,4 +124,9 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Unlayered so it outranks lenis.css, which disables iframe pointer events. */
+.lenis.lenis-smooth [data-map] iframe {
+  pointer-events: auto;
 }

@@ -7,8 +7,29 @@ This is a standalone Next.js app, separate from the AI Study Planner in the repo
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · Framer Motion (`LazyMotion`, reduced-motion aware) · Lucide icons.
+Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · GSAP + ScrollTrigger · Lenis · Framer Motion (`LazyMotion`) · Lucide icons.
 Fonts: Cormorant Garamond (headings) + Manrope (body), self-hosted via `next/font`.
+
+## Motion & 3D
+
+Each animated property has one owner: **GSAP** drives everything scroll-linked, and **Framer Motion** handles component state
+(menu, tabs, accordions, form, section reveals).
+
+| Piece | Where | What it does |
+| --- | --- | --- |
+| Hero film | `components/film/` | Real-time WebGL fragment shader (no 3D library). A satin, skin-like surface and a golden serum droplet that falls, is absorbed and ripples outward as you scroll. The camera pushes in, and lines two and three of the headline fill in letter by letter. |
+| Skin, layer by layer | `sections/skin-layers.tsx` | Pinned CSS-3D stack of four skin layers that separates on scroll, lifting each layer in turn with the concerns found at that depth. |
+| Featured care | `sections/featured.tsx` | Pinned horizontal scroll on desktop, with 3D slide swing and image parallax. A native snap carousel elsewhere. |
+| Cards | `ui/tilt.tsx` | Pointer-driven 3D tilt with a soft glare (mouse only). |
+| Gallery | `sections/gallery.tsx` | Circle-wipe reveals. |
+| Smooth scroll | `ui/smooth-scroll.tsx` | Lenis on GSAP's ticker. Also handles same-page `#anchor` links. |
+
+**Reduced motion** (`prefers-reduced-motion: reduce`): no smooth scrolling and no pinning. The hero renders one still frame with the
+full headline, and the skin layers show as a static 3D stack with all four descriptions.
+
+The hero film is procedural, so there are no video frames to download. An AI-generated, scroll-scrubbed film (via the
+scroll-site-generator skill and Higgsfield) can be layered in later. It was not generated for this build because the connected
+Higgsfield account had no credits. If you add one, keep it abstract: no people, and nothing that could be mistaken for the real clinic.
 
 ## Run locally
 

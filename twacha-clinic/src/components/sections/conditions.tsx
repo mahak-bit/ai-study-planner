@@ -8,6 +8,7 @@ import { hairConditions, skinConditions, type Condition } from '@/content/condit
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal, Stagger, StaggerItem } from '@/components/ui/reveal';
 import { cn } from '@/lib/cn';
+import { Tilt } from '@/components/ui/tilt';
 
 function ConditionCard({ condition }: { condition: Condition }) {
   const [open, setOpen] = useState(false);
@@ -15,10 +16,8 @@ function ConditionCard({ condition }: { condition: Condition }) {
   const Icon = condition.icon;
 
   return (
-    <StaggerItem
-      as="article"
-      className="group relative flex h-full flex-col border-r border-b border-line bg-ivory p-7 transition-[background-color,box-shadow] duration-500 ease-[var(--ease-luxe)] hover:z-10 hover:bg-white hover:shadow-[0_24px_50px_-28px_rgba(42,38,35,0.3)]"
-    >
+    <StaggerItem as="article" className="border-r border-b border-line hover:z-10">
+      <Tilt className="group flex flex-col bg-ivory p-7 transition-[background-color,box-shadow,transform] duration-500 ease-[var(--ease-luxe)] hover:bg-white hover:shadow-[0_24px_50px_-28px_rgba(42,38,35,0.3)]">
       <div className="flex items-start justify-between">
         <span className="grid size-12 place-items-center rounded-full bg-sand/70 text-clay transition-colors duration-500 group-hover:bg-clay group-hover:text-ivory">
           <Icon aria-hidden className="size-5" strokeWidth={1.4} />
@@ -60,6 +59,7 @@ function ConditionCard({ condition }: { condition: Condition }) {
         <Plus aria-hidden className={cn('size-3.5 transition-transform duration-300', open && 'rotate-45')} />
         <span className="sr-only"> about {condition.name}</span>
       </button>
+      </Tilt>
     </StaggerItem>
   );
 }

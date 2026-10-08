@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { clinic, siteUrl } from '@/content/clinic';
 import { clinicJsonLd, serializeJsonLd } from '@/lib/structured-data';
 import { MotionProvider } from '@/components/ui/motion-provider';
+import { SmoothScroll } from '@/components/ui/smooth-scroll';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { MobileCtaBar } from '@/components/layout/mobile-cta-bar';
@@ -52,14 +53,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-IN" className={`${cormorant.variable} ${manrope.variable}`} data-scroll-behavior="smooth">
+    <html lang="en-IN" className={`${cormorant.variable} ${manrope.variable}`}>
       <body className="min-h-dvh">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(clinicJsonLd()) }} />
         <MotionProvider>
-          <Navbar />
-          <main id="main">{children}</main>
-          <Footer />
-          <MobileCtaBar />
+          <SmoothScroll>
+            <Navbar />
+            <main id="main">{children}</main>
+            <Footer />
+            <MobileCtaBar />
+          </SmoothScroll>
         </MotionProvider>
       </body>
     </html>

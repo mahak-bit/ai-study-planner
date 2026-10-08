@@ -81,7 +81,7 @@ export function About() {
           </Reveal>
 
           <Reveal delay={0.2} className="mt-12 flex flex-wrap items-center gap-6">
-            <ButtonLink href="/book">Meet the Doctor</ButtonLink>
+            <ButtonLink href="/book">Book a Consultation</ButtonLink>
             <p className="text-sm text-muted">Consultations at {clinic.name}, Talwandi.</p>
           </Reveal>
         </div>
