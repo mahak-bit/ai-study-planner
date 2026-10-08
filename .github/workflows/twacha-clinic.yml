@@ -1,0 +1,27 @@
+name: Twacha Clinic site
+
+on:
+  pull_request:
+    paths: ['twacha-clinic/**', '.github/workflows/twacha-clinic.yml']
+  push:
+    branches: [main]
+    paths: ['twacha-clinic/**', '.github/workflows/twacha-clinic.yml']
+
+defaults:
+  run:
+    working-directory: twacha-clinic
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: twacha-clinic/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build

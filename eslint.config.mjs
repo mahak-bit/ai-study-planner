@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     'playwright-report/**',
     'test-results/**',
+    // Separate Next.js app with its own lint setup.
+    'twacha-clinic/**',
   ]),
 ]);
 
